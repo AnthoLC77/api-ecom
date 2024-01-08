@@ -9,6 +9,7 @@ const cors = require("cors");
 // Import des routes pour l'authentification
 
 // Import de la configuration de la base de données
+const connectDB = require("./config/db");
 
 // Initialisation de l'application Express
 const app = express();
@@ -30,6 +31,9 @@ const corsOptions = {
   preflightContinue: false,
 };
 
+// Middleware pour gerer les cors
+app.use(cors(corsOptions));
+
 // Définition du port de demarrage du serveur
 const PORT = process.env.PORT || 5200;
 
@@ -37,6 +41,8 @@ const PORT = process.env.PORT || 5200;
 const start = async () => {
   try {
     // Connecion a la base de données
+    await connectDB();
+    console.log("Connexion à la base de données réussie");
     // Demarrage du serveur le port spécifié
     app.listen(PORT, () => console.log(`Le serveur à démarrer sur le ${PORT}`));
   } catch (error) {
