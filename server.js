@@ -8,6 +8,10 @@ const cors = require("cors");
 
 // Import des routes pour l'authentification
 
+app.get("/", (req, res) => {
+  res.send("Hello world");
+});
+
 // Import de la configuration de la base de données
 const connectDB = require("./config/db");
 
