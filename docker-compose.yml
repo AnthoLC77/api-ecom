@@ -1,15 +1,19 @@
 version: "3"
+
 services:
   app:
-    image: node:18
-    command: bash -c "yarn && yarn start"
+    build:
+      context: .
+      dockerfile: dockerfile
     restart: unless-stopped
     volumes:
       - ".:/usr/src/app"
     working_dir: /usr/src/app
     ports:
-      - "5200:5200"
+      - "5000:5000"
     links:
+      - mongo
+    depends_on:
       - mongo
 
   mongo:
@@ -17,3 +21,6 @@ services:
     image: mongo
     ports:
       - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
