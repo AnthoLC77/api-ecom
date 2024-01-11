@@ -1,4 +1,5 @@
 const productModel = require('../models/product.model');
+const fs = require('fs');
 
 // Fonction pour créer un produit (accesible seulement par l'administrateur)
 module.exports.createProduct = async (req, res) => {
@@ -96,5 +97,52 @@ module.exports.deleteProduct = async (req, res) => {
 	} catch (error) {
 		console.erreur('Erreur lors de la suppression du produit : ', error.message);
 		res.status(500).json({ message: 'Erreur lors de la suppression du produit' });
+	}
+};
+
+module.exports.updateProduct = async (req, res) => {
+	try {
+		if (req.user.role !== 'admin') {
+			// return d'un message d'erreur
+			return res
+				.status(403)
+				.json({ message: 'Action non autorisée. Seul un admin peut modifier un produit' });
+		}
+
+		// Déclaration de la variable qui va rechercher l'id du produit en paramètre de l'url
+		const productId = req.params.id;
+
+		// Déclaration de la variable pour
+		const existingProduct = await productModel.findById(productId);
+
+		if (!existingProduct) {
+			return res.status(400).json({ message: 'Produit non trouvé' });
+		}
+
+		// Modifie les données entrées dans le formulaire
+		existingProduct.title = req.body.title || existingProduct.title;
+		existingProduct.description = req.body.description || existingProduct.description;
+		existingProduct.price = req.body.price || existingProduct.price;
+
+		// Vérifier si une nouvelle image est téléchargée, mettre à jour le chemin de l'image
+		if (req.file) {
+			// Supprimer l'ancienne image si il y'en a une
+			if (existingProduct.image) {
+				fs.unlinkSync(existingProduct.image);
+			}
+			// Recupere le chemin de la nouvelle image
+			existingProduct.imageUrl = req.file.path;
+		}
+		// Enregistrer les modifications dans la BDD
+		const updateProducts = await existingProduct.save();
+
+		// Réponse de succes
+		res.status(200).json({
+			message: 'Modification du produit effectué avec success !',
+			product: updateProducts,
+		});
+	} catch (error) {
+		console.log('Erreur lors de la modification du produit : ', error.message);
+		res.status(500).json({ message: 'Erreur lors de la modification du produit' });
 	}
 };
