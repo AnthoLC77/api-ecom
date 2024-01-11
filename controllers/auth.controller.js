@@ -6,7 +6,7 @@ const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 // Import du module jwt pour les tokens
 const jwt = require('jsonwebtoken');
-const { isEmpty } = require('validator');
+const validator = require('validator');
 
 // Fonction pour l'inscription
 module.exports.register = async (req, res) => {
@@ -29,6 +29,14 @@ module.exports.register = async (req, res) => {
 				message: 'Le mot de passe doit contenir au moins 6 caractères',
 			});
 		}
+
+		// Verification si l'email est valide
+		if (!validator.isEmail(email)) {
+			return res.status(400).json({
+				message: 'Email invalide',
+			});
+		}
+
 		// Vérification de l'email si il existe deja dans la base de données
 		const existingUser = await authModel.findOne({ email });
 		// Renvoie une erreur si l'email existe deja
@@ -38,7 +46,7 @@ module.exports.register = async (req, res) => {
 			});
 		}
 		// Création d'un nouvel utilisateur
-		const user = authModel.create({
+		const user = await authModel.create({
 			lastname,
 			firstname,
 			email,

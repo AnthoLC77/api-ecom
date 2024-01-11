@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
-	createdby: {
+	createdBy: {
 		type: mongoose.Schema.Types.ObjectId,
 		ref: 'User',
 		required: [null],
