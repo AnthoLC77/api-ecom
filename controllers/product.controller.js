@@ -12,8 +12,26 @@ module.exports.createProduct = async (req, res) => {
 		}
 		// Recuperation des données du formulaire
 		const { title, description, price } = req.body;
+
+		// Vérification si une image est téléchargée
+		if (!req.file) {
+			return res.status(400).json({ message: 'Veuillez télécharger une image' });
+		}
+
+		// Déclaration de variable pour recuperer le chemin de l'image après le téléchargement
+		const imageUrl = req.file.path;
+
+		// Déclaration de variable pour recuperer l'id de l'utilisateur qui va poster un produit
+		const userId = req.user._id;
+
 		// Création d'un produit
-		const newProduct = await productModel.create({ title, description, price });
+		const newProduct = await productModel.create({
+			title,
+			description,
+			price,
+			imageUrl,
+			createdBy: userId,
+		});
 
 		res.status(200).json({ message: 'Produit ajouté avec success', product: newProduct });
 	} catch (error) {
