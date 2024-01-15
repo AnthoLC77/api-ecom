@@ -9,6 +9,13 @@ const upload = multer({ storage: storage });
 
 const cloudinaryUpload = async (req, res, next) => {
 	try {
+		// Vérifier si l'utilisateur est admin
+		if (req.user.role !== 'admin') {
+			// return d'un message d'erreur
+			return res
+				.status(403)
+				.json({ message: 'Action non autorisée. Seul un admin peut créer un produit' });
+		}
 		console.log('début du middleware cloudinaryUpload');
 		// Utilisation de multer pour gérer le fichier depuis la requête
 		upload.single('image')(req, res, async (err) => {

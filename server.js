@@ -35,14 +35,9 @@ app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Utilisation  des routes pour l'authentification
-app.use('/api', authRoutes);
-
-// Utilisation des routes pour la création des produits
-app.use('/api', productRoutes);
-
 // Configuration des options cors
 const corsOptions = {
+	origin: '*',
 	credentials: true,
 	optionsSuccessStatus: 200,
 	methods: 'GET, POST, PUT, DELETE, PATCH, HEAD',
@@ -51,6 +46,12 @@ const corsOptions = {
 
 // Middleware pour gerer les cors
 app.use(cors(corsOptions));
+
+// Utilisation  des routes pour l'authentification
+app.use('/api', authRoutes);
+
+// Utilisation des routes pour la création des produits
+app.use('/api', productRoutes);
 
 // Définition du port de demarrage du serveur
 const PORT = process.env.PORT || 5200;

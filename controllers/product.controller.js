@@ -1,3 +1,4 @@
+const cloudinaryUpload = require('../middleware/cloudinaryUpload');
 const productModel = require('../models/product.model');
 const cloudinary = require('cloudinary').v2;
 
@@ -7,6 +8,7 @@ module.exports.createProduct = async (req, res) => {
 		// Vérifier si l'utilisateur est admin
 		if (req.user.role !== 'admin') {
 			// return d'un message d'erreur
+			console.log("Ajout d'une image en tant qu'admin");
 			return res
 				.status(403)
 				.json({ message: 'Action non autorisée. Seul un admin peut créer un produit' });
@@ -130,11 +132,12 @@ module.exports.updateProduct = async (req, res) => {
 		// Vérifier si une nouvelle image est téléchargée, mettre à jour le chemin de l'image
 		if (req.file) {
 			// Supprimer l'ancienne image si il y'en a une
-			if (existingProduct.image) {
-				fs.unlinkSync(existingProduct.image);
+			if (existingProduct.imagePublicId) {
+				await cloudinary.uploader.destroy(existingProduct.imagePublicId);
 			}
-			// Recupere le chemin de la nouvelle image
-			existingProduct.imageUrl = req.file.path;
+			// Redonne une nouvelle url et un nouvel id a l'image
+			existingProduct.imageUrl = req.cloudinaryUrl;
+			existingProduct.imagePublicId = req.file.public_id;
 		}
 		// Enregistrer les modifications dans la BDD
 		const updateProducts = await existingProduct.save();
