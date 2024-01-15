@@ -1,5 +1,5 @@
 const productModel = require('../models/product.model');
-const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
 
 // Fonction pour créer un produit (accesible seulement par l'administrateur)
 module.exports.createProduct = async (req, res) => {
@@ -15,15 +15,16 @@ module.exports.createProduct = async (req, res) => {
 		const { title, description, price } = req.body;
 
 		// Vérification si une image est téléchargée
-		if (!req.file) {
+		if (!req.cloudinaryUrl || !req.file) {
 			return res.status(400).json({ message: 'Veuillez télécharger une image' });
 		}
 
-		// Déclaration de variable pour recuperer le chemin de l'image après le téléchargement
-		const imageUrl = req.file.path;
-
 		// Déclaration de variable pour recuperer l'id de l'utilisateur qui va poster un produit
 		const userId = req.user._id;
+
+		// Utilisation de l'url de cloudinary et du public_id provenant du middleware
+		const imageUrl = req.cloudinaryUrl;
+		const imagePublicId = req.file.public_id;
 
 		// Création d'un produit
 		const newProduct = await productModel.create({
@@ -31,6 +32,7 @@ module.exports.createProduct = async (req, res) => {
 			description,
 			price,
 			imageUrl,
+			imagePublicId,
 			createdBy: userId,
 		});
 
