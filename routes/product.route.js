@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const productController = require('../controllers/product.controller');
 const authMiddleware = require('../middleware/authenticate');
-const upload = require('../middleware/upload');
+const upload = require('../middleware/cloudinary.Upload');
 
 // Route pour la creation d'un produit en tant qu'admin en prenant en compte le authMiddleware.authenticate
 router.post(

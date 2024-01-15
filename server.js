@@ -6,6 +6,16 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
+// Import cloudinary
+const cloudinary = require('cloudinary').v2;
+
+// Configuration de cloudinary
+cloudinary.config({
+	cloud_name: process.env.CLOUD_NAME,
+	api_key: process.env.API_KEY,
+	api_secret: process.env.API_SECRET,
+});
+
 // Import des routes pour l'authentification
 const authRoutes = require('./routes/auth.route');
 
@@ -51,7 +61,7 @@ const start = async () => {
 		// Connecion a la base de données
 		await connectDB();
 		// Demarrage du serveur le port spécifié
-		app.listen(PORT, () => console.log(`Le serveur à démarrer sur le ${PORT}`));
+		app.listen(PORT, () => console.log(`Le serveur à démarrer sur le port ${PORT}`));
 	} catch (error) {
 		console.log(error);
 	}

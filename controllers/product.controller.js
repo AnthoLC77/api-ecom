@@ -100,6 +100,7 @@ module.exports.deleteProduct = async (req, res) => {
 	}
 };
 
+// Fonction qui va permettre de d'updte un produit avec son id (Admin)
 module.exports.updateProduct = async (req, res) => {
 	try {
 		if (req.user.role !== 'admin') {
