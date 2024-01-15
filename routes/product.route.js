@@ -16,12 +16,7 @@ router.get('/all-products', productController.getAllProducts);
 // Route pour recupérer un seul produit avec son ID
 router.get('/one-product/:id', productController.getProductsById);
 // Route pour supprimer un produit avec son id
-router.delete(
-	'/delete-product/:id',
-	authMiddleware.authenticate,
-	CloudinaryUpload,
-	productController.deleteProduct
-);
+router.delete('/delete-product/:id', authMiddleware.authenticate, productController.deleteProduct);
 // Route pour modifier un produit avec son id
 router.put(
 	'/update-product/:id',

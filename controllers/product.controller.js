@@ -87,16 +87,35 @@ module.exports.deleteProduct = async (req, res) => {
 				.status(403)
 				.json({ message: 'Action non autorisée. Seul un admin peut supprimer un produit' });
 		}
-		// Déclaration de la variable qui va rechercher l'id du produit
+		// Déclaration de la variable qui va rechercher l'id du produit pour le mettre en paramètre d'url
 		const productId = req.params.id;
 
-		// Récupération du produit par son id
-		const deletedProduct = await productModel.findByIdAndDelete(productId);
+		// Récupération du produit par son id par rapport au modele
+		const product = await productModel.findById(productId);
 
-		if (!deletedProduct) {
+		// Vérifié si le produit existe
+		if (!product) {
+			return res.status(404).json({ message: 'Produit non trouvé' });
+		}
+
+		// Rechercher l'id de l'image sur cloudinary
+		const imagePublicId = product.imagePublicId;
+
+		// Suppression du produit
+		const deleteProduct = await productModel.findByIdAndDelete(productId);
+
+		if (!deleteProduct) {
 			res.status(404).json({ message: 'Produit non trouvé' });
 		}
 
+		console.log('Image Public ID: ', imagePublicId);
+		console.log('Produit supprimé avec success');
+
+		// Suppression de l'image dans cloudinary
+		if (imagePublicId) {
+			await cloudinary.uploader.destroy(imagePublicId);
+			console.log('Image supprimé avec cloudinary avec succès');
+		}
 		res.status(200).json({ message: 'Produit supprimé avec success' });
 	} catch (error) {
 		console.erreur('Erreur lors de la suppression du produit : ', error.message);
