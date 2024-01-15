@@ -21,9 +21,16 @@ const productSchema = new mongoose.Schema({
 		type: String,
 		required: [true, 'Veuillez renseigner un prix'],
 	},
+
 	imageUrl: {
 		type: String,
 	},
+
+	imagePublicId: {
+		type: String,
+		Default: null,
+	},
+
 	timestamp: {
 		type: Date,
 		default: Date.now,
