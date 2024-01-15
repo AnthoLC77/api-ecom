@@ -5,8 +5,10 @@ const authMiddleware = require('../middleware/authenticate');
 // Route pour l'inscription
 router.post('/register', authController.register);
 
-// Route pour connection
+// Route pour connexion
 router.post('/login', authController.login);
+
+// Route pour le mot de passe oublié 
 
 // Route protegee
 router.get('/dashboard', authMiddleware.authenticate, (req, res) => {
