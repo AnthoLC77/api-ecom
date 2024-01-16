@@ -73,8 +73,8 @@ module.exports.getProductsById = async (req, res) => {
 		}
 		res.status(200).json({ message: 'Produit trouvé avec success!', product });
 	} catch (error) {
-		console.erreur('Erreur lors de la récupération du produit : ', error.message);
-		res.status(500).json({ message: 'Erreur lors de la récupération du produit' });
+		console.error('Erreur lors de la récupération des utilisateurs : ', error.message);
+		res.status(500).json({ message: 'Erreur lors de la récupération du produit', error });
 	}
 };
 

@@ -46,12 +46,11 @@ const authSchema = new mongoose.Schema({
 
 	avatarUrl: {
 		type: String,
-		required: true,
 	},
 
 	avatarPublicId: {
 		type: String,
-		required: null,
+		default: null,
 	},
 
 	email: {

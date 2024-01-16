@@ -92,11 +92,15 @@ module.exports.update = async (req, res) => {
 		if (!existingUser) {
 			return res.status(404).json({ message: 'Utilisateur non trouvé' });
 		}
-		// Supprimer l'ancienne image sur cloudinary si elle existe
+
+		// Verifier si une nouvelle image est télécharger, mettre à jour le chemin de l'image
 		if (req.file) {
 			if (existingUser.avatarPublicId) {
 				await cloudinary.uploader.destroy(existingUser.avatarPublicId);
 			}
+			// Redonne une nouvelle url et un nouvel id a l'image
+			existingUser.avatarUrl = req.cloudinaryUrl;
+			existingUser.avatarPublicId = req.file.public_id;
 		}
 
 		// Mettre à jour les informations de l'utilisateur
@@ -195,5 +199,51 @@ module.exports.login = async (req, res) => {
 		// Renvoie une erreur si il y a un problème lors de la connexion de l'utilisateur
 		console.error('Erreur lors de la connexion : ', error.message);
 		res.status(500).json({ message: 'Erreur lors de la connexion' });
+	}
+};
+
+// Fonction pour afficher tout les utilisateurs en tant qu'admin
+module.exports.getAllUsers = async (req, res) => {
+	try {
+		if (req.user.role !== 'admin') {
+			// return d'un message d'erreur
+			return res
+				.status(403)
+				.json({ message: 'Action non autorisée. Seul un admin peut modifier un produit' });
+		}
+
+		const user = await authModel.find();
+
+		res.status(200).json({ message: 'Liste des users avec success', user });
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ message: 'Erreur lors de la récupération des utilisateurs', error });
+	}
+};
+
+// Fonction pour afficher un utilisateur avec son id en tant qu'admin
+module.exports.getUserById = async (req, res) => {
+	try {
+		if (req.user.role !== 'admin') {
+			// Retourne un message d'erreur
+			return res.status(403).json({
+				message: 'Action non autorisée. Seul un admin peut modifier un produit',
+			});
+		}
+
+		const userId = req.params.id;
+
+		const user = await authModel.findById(userId);
+
+		if (!user) {
+			// Utilisateur non trouvé
+			return res.status(404).json({ message: 'Utilisateur non trouvé' });
+		}
+
+		// Utilisateur trouvé avec succès
+		res.status(200).json({ message: 'Utilisateur trouvé avec succès!', user });
+	} catch (error) {
+		console.error('Erreur lors de la récupération des utilisateurs : ', error.message);
+		res.status(500).json({ message: "Erreur lors de la récupération de l'utilisateur" });
 	}
 };

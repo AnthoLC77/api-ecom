@@ -15,6 +15,11 @@ router.put('/update/:id', cloudinaryUpload, authController.update);
 // Route pour supprimer un utilisateur
 router.delete('/delete/:id', authController.delete);
 
+// Route pour afficher tout les utilisateur
+router.get('/all-users', authMiddleware.authenticate, authController.getAllUsers);
+
+router.get('/one-user/:id', authMiddleware.authenticate, authController.getUserById);
+
 // Route proteger
 router.get('/dashboard', authMiddleware.authenticate, (req, res) => {
 	// Verifier si l"utilisateur est un admin
