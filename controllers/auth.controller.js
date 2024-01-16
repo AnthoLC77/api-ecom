@@ -6,7 +6,8 @@ const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 // Import du module jwt pour les tokens
 const jwt = require('jsonwebtoken');
-const validator = require('validator');
+// Import du module cloudinary
+const cloudinary = require('cloudinary').v2;
 
 // Fonction pour l'inscription
 module.exports.register = async (req, res) => {
@@ -20,40 +21,47 @@ module.exports.register = async (req, res) => {
 			return res.status(400).json({ errors: errors.array() });
 		}
 		// Récupération des données du formulaire
-		const { email, password } = req.body;
-		// Vérification de la longueur du mot de passe avec une condition
-		if (password.length < 6) {
-			// Vérification de la longueur du mot de passe (6 caractères minimum)
-			// Renvoie une erreur si le mot de passe est trop court
-			return res.status(400).json({
-				message: 'Le mot de passe doit contenir au moins 6 caractères',
-			});
-		}
+		const { lastname, firstname, birthday, address, zipcode, city, phone, email, password } =
+			req.body;
 
-		// Verification si l'email est valide
-		if (!validator.isEmail(email)) {
-			return res.status(400).json({
-				message: 'Email invalide',
-			});
+		// Vérifier si une image est téléchargée
+		if (!req.cloudinaryUrl || !req.file) {
+			return res.status(400).json({ message: 'Veuillez télécharger une image' });
 		}
 
 		// Vérification de l'email si il existe deja dans la base de données
-		const existingUser = await authModel.findOne({ email });
+		const existingAuth = await authModel.findOne({ email });
 		// Renvoie une erreur si l'email existe deja
-		if (existingUser) {
+		if (existingAuth) {
 			return res.status(400).json({
 				message: 'Votre email existe deja en base de données. Veuillez en choisir un autre',
 			});
 		}
+
+		// Utilisation de l'url cloudinary et du public_id provenant du middleware
+		const avatarUrl = req.cloudinaryUrl;
+		const avatarPublicId = req.file.public_id;
+
 		// Création d'un nouvel utilisateur
-		const user = await authModel.create({
+		const auth = await authModel.create({
+			lastname,
+			firstname,
+			birthday,
+			address,
+			zipcode,
+			city,
+			phone,
 			email,
 			password,
+			avatarUrl,
+			avatarPublicId,
 		});
+
 		// Renvoie une reponse positive si l'utilisateur est bien enregistré
-		res.status(201).json({ message: 'Utilisateur crée avec succès', user });
+		res.status(201).json({ message: 'Utilisateur crée avec succès', auth });
 	} catch (err) {
 		// Renvoie une erreur si il y a un probleme lors de l'enregistrement de l'utilisateur
+		console.error(err);
 		res.status(500).json({
 			message: "Erreur lors de l'enregistrement de l'utilisateur",
 		});
@@ -109,7 +117,3 @@ module.exports.login = async (req, res) => {
 		res.status(500).json({ message: 'Erreur lors de la connexion' });
 	}
 };
-
-// Fonction pour la modification
-
-// Fonction pour supprimer

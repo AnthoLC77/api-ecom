@@ -4,12 +4,54 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 // Import de validator pour la validation de l'email
 const validator = require('validator');
+// Import de cloudinary
+const cloudinary = require('cloudinary').v2;
 
 // Définition du schema de l'utilisateur
 const authSchema = new mongoose.Schema({
-	user: {
-		type: mongoose.Schema.Types.ObjectId,
-		ref: 'User',
+	lastname: {
+		type: String,
+		required: true,
+	},
+
+	firstname: {
+		type: String,
+		required: true,
+	},
+
+	birthday: {
+		type: String,
+		required: true,
+	},
+
+	address: {
+		type: String,
+		required: true,
+	},
+
+	zipcode: {
+		type: String,
+		required: true,
+	},
+
+	city: {
+		type: String,
+		required: true,
+	},
+
+	phone: {
+		type: Number,
+		required: true,
+	},
+
+	avatarUrl: {
+		type: String,
+		required: true,
+	},
+
+	avatarPublicId: {
+		type: String,
+		required: null,
 	},
 
 	email: {
@@ -26,11 +68,18 @@ const authSchema = new mongoose.Schema({
 		type: String,
 		required: [true, 'Veuillez renseigner un mot de passe'],
 	},
+
 	role: {
 		type: String,
 		enum: ['user', 'admin'],
 		default: 'user',
 	},
+
+	imagePublicId: {
+		type: String,
+		Default: null,
+	},
+
 	timestamp: {
 		type: Date,
 		default: Date.now,
