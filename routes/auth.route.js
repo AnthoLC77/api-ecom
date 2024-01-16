@@ -18,39 +18,13 @@ router.delete('/delete/:id', authController.delete);
 // Route pour afficher tout les utilisateur
 router.get('/all-users', authMiddleware.authenticate, authController.getAllUsers);
 
+// Route pour afficher un utilisateur par son ID
 router.get('/one-user/:id', authMiddleware.authenticate, authController.getUserById);
 
-// Route proteger
-router.get('/dashboard', authMiddleware.authenticate, (req, res) => {
-	// Verifier si l"utilisateur est un admin
-	if (req.user.role === 'admin') {
-		// Definition de req.isAdmin sera egal a true pour les administrateur
-		req.isAdmin = true;
-		// Envoyer une reponse de succes
-		return res.status(200).json({ message: 'Bienvenue administrateur' });
-	} else {
-		//Envoyer une reponse pour les utilisateurs non admin
-		return res.status(403).json({
-			message: 'Action non autorisee, seul les administrateurs peuvent acceder a cette page',
-		});
-	}
-});
+// Afficher le profil d'un user
+router.get('/profil-user/:id', authController.getProfilUser);
 
-// Admin
-// Route pour ajouter mes informations
-// Route pour voir mes informations
-// Route pour modifier mes informations
-// Route pour supprimer mon compte
-
-// Admin 2
-// Route pour voir tout un utilisateur
-// Route pour supprimer les utilisateurs
-// Route pour modifier un utilisateur
-
-// User
-// Route pour ajouter mes informations
-// Route pour voir mes informations
-// Route pour modifier mes informations
-// Route pour supprimer mon compte
+// Route proteger dashboard
+router.get('/dashboard', authMiddleware.authenticate, authController.dashboard);
 
 module.exports = router;

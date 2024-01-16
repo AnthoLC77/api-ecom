@@ -247,3 +247,37 @@ module.exports.getUserById = async (req, res) => {
 		res.status(500).json({ message: "Erreur lors de la récupération de l'utilisateur" });
 	}
 };
+
+// Fonction pour la connection pour le dashboard
+module.exports.dashboard = async (req, res) => {
+	if (req.user.role === 'admin') {
+		// Definition de req.isAdmin sera egal a true pour les administrateur
+		req.isAdmin = true;
+		// Envoyer une reponse de succes
+		return res.status(200).json({ message: 'Bienvenue administrateur' });
+	} else {
+		//Envoyer une reponse pour les utilisateurs non admin
+		return res.status(403).json({
+			message: 'Action non autorisee, seul les administrateurs peuvent acceder a cette page',
+		});
+	}
+};
+
+// Fonction pour la récupération des données user
+module.exports.getProfilUser = async (req, res) => {
+	try {
+		const userId = req.params.id;
+
+		const user = await authModel.findById(userId);
+
+		if (!user) {
+			res.status(404).json({ message: 'profil utilisateur inexistant' });
+		}
+
+		// Utilisateur trouvé avec succès
+		res.status(200).json({ message: 'Utilisateur trouvé avec succès!', user });
+	} catch (err) {
+		console.error('Erreur lors de la récupération des utilisateurs : ', err.message);
+		res.status(500).json({ message: "Erreur lors de la récupération de l'utilisateur" });
+	}
+};
