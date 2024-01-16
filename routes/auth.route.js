@@ -9,9 +9,13 @@ router.post('/register', cloudinaryUpload, authController.register);
 // Route pour connexion
 router.post('/login', authController.login);
 
-// Route pour le mot de passe oublié
+// Route pour la modification du profil
+router.put('/update/:id', cloudinaryUpload, authController.update);
 
-// Route protegee
+// Route pour supprimer un utilisateur
+router.delete('/delete/:id', authController.delete);
+
+// Route proteger
 router.get('/dashboard', authMiddleware.authenticate, (req, res) => {
 	// Verifier si l"utilisateur est un admin
 	if (req.user.role === 'admin') {

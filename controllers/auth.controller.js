@@ -68,6 +68,86 @@ module.exports.register = async (req, res) => {
 	}
 };
 
+// Fonction pour la modification du profil
+module.exports.update = async (req, res) => {
+	try {
+		// Déclaration de variable pour la gestion des erreurs de validation
+		const errors = validationResult(req);
+
+		// Vérification si il y a une des erreurs de validation
+		if (!errors.isEmpty()) {
+			return res.status(400).json({ errors: errors.array() });
+		}
+
+		// Recupération de l'id de l'utilisateur pour le mettre en param de requête
+		const userId = req.params.id;
+
+		// Récupération des données du formulaire
+		const { lastname, firstname, birthday, address, zipcode, city, phone, email } = req.body;
+
+		// Vérifié si l'utilisateur existe avant la mise à jour
+		const existingUser = await authModel.findById(userId);
+
+		// Condition si l'utilisateur n'existe pas en base de données
+		if (!existingUser) {
+			return res.status(404).json({ message: 'Utilisateur non trouvé' });
+		}
+		// Supprimer l'ancienne image sur cloudinary si elle existe
+		if (req.file) {
+			if (existingUser.avatarPublicId) {
+				await cloudinary.uploader.destroy(existingUser.avatarPublicId);
+			}
+		}
+
+		// Mettre à jour les informations de l'utilisateur
+		existingUser.lastname = lastname;
+		existingUser.firstname = firstname;
+		existingUser.birthday = birthday;
+		existingUser.address = address;
+		existingUser.zipcode = zipcode;
+		existingUser.city = city;
+		existingUser.phone = phone;
+
+		// Mettre à jour l'email iniquement si fourni dans la requête
+		if (email) {
+			existingUser.email = email;
+		}
+
+		// Sauvergarder les modifications
+		await existingUser.save();
+
+		// Code de success
+		res.status(200).json({ message: 'Profil mise à jour avec success', user: existingUser });
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ message: 'Erreur lors de la mise à jour du profil' });
+	}
+};
+
+// Fonction pour supprimer un utilisateur
+module.exports.delete = async (req, res) => {
+	try {
+		// Déclaration de la variable qui va rechercher l'id user pour le mettre en params url
+		const userId = req.params.id;
+
+		// Déclaration de variable qui va vérifier sur l'utilisateur existe
+		const existingUser = await authModel.findById(userId);
+
+		// Suppression de l'avatar de cloudinary si celui existe
+		if (existingUser.avatarPublicId) {
+			await cloudinary.uploader.destroy(existingUser.avatarPublicId);
+		}
+		// Supprimer l'utilisateur de la basse de données
+		await authModel.findByIdAndDelete(userId);
+
+		// Message de success
+		res.status(200).json({ message: 'Utilisateur supprimé avec success' });
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ message: "Erreur lors de la suppression de l'utilisateur" });
+	}
+};
+
 // Fonction pour la connexion
 module.exports.login = async (req, res) => {
 	try {
