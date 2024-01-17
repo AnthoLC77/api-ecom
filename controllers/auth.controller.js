@@ -349,4 +349,31 @@ module.exports.updateUser = async (req, res) => {
 };
 
 // Fonction pour supprimer un utilisateur (admin)
-module.exports.deleteUser = async (req, res) => {};
+module.exports.deleteUser = async (req, res) => {
+	try {
+		if (req.user.role !== 'admin') {
+			// Retourne un message d'erreur
+			return res.status(403).json({
+				message: 'Action non autorisée. Seul un admin peut supprimer un utilisateur',
+			});
+		}
+		// Déclaration de la variable qui va rechercher l'id user pour le mettre en params url
+		const userId = req.params.id;
+
+		// Déclaration de variable qui va vérifier sur l'utilisateur existe
+		const existingUser = await authModel.findById(userId);
+
+		// Suppression de l'avatar de cloudinary si celui existe
+		if (existingUser.avatarPublicId) {
+			await cloudinary.uploader.destroy(existingUser.avatarPublicId);
+		}
+		// Supprimer l'utilisateur de la basse de données
+		await authModel.findByIdAndDelete(userId);
+
+		// Message de success
+		res.status(200).json({ message: 'Utilisateur supprimé avec success' });
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ message: "Erreur lors de la suppression de l'utilisateur" });
+	}
+};

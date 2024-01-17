@@ -22,10 +22,15 @@ router.get('/all-users', authMiddleware.authenticate, authController.getAllUsers
 router.get('/one-user/:id', authMiddleware.authenticate, authController.getUserById);
 
 // Route pour modifier le profil d'un utilisateur (admin)
-router.put('/update-user/:id', authMiddleware.authenticate, cloudinaryUpload,  authController.updateUser);
+router.put(
+	'/update-user/:id',
+	authMiddleware.authenticate,
+	cloudinaryUpload,
+	authController.updateUser
+);
 
 // Route pour supprimer le profil d'un utilisateur (admin)
-router.post('/delete-user/:id', authController.deleteUser);
+router.delete('/delete-user/:id', authMiddleware.authenticate, authController.deleteUser);
 
 // Route pour afficher son profil
 router.get('/profile/:id', authController.getProfile);
