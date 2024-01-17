@@ -12,17 +12,23 @@ router.post('/login', authController.login);
 // Route pour la modification du profil
 router.put('/update/:id', cloudinaryUpload, authController.update);
 
-// Route pour supprimer un utilisateur
+// Route pour supprimer notre profil
 router.delete('/delete/:id', authController.delete);
 
-// Route pour afficher tout les utilisateur
+// Route pour afficher tout les utilisateur (admin)
 router.get('/all-users', authMiddleware.authenticate, authController.getAllUsers);
 
-// Route pour afficher un utilisateur par son ID
+// Route pour afficher un utilisateur par son ID (admin)
 router.get('/one-user/:id', authMiddleware.authenticate, authController.getUserById);
 
-// Afficher le profil d'un user
-router.get('/profil-user/:id', authController.getProfilUser);
+// Route pour modifier le profil d'un utilisateur (admin)
+router.put('/update-user/:id', authMiddleware.authenticate, cloudinaryUpload,  authController.updateUser);
+
+// Route pour supprimer le profil d'un utilisateur (admin)
+router.post('/delete-user/:id', authController.deleteUser);
+
+// Route pour afficher son profil
+router.get('/profile/:id', authController.getProfile);
 
 // Route proteger dashboard
 router.get('/dashboard', authMiddleware.authenticate, authController.dashboard);

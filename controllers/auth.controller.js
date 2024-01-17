@@ -128,7 +128,7 @@ module.exports.update = async (req, res) => {
 	}
 };
 
-// Fonction pour supprimer un utilisateur
+// Fonction pour supprimer notre profil
 module.exports.delete = async (req, res) => {
 	try {
 		// Déclaration de la variable qui va rechercher l'id user pour le mettre en params url
@@ -202,7 +202,7 @@ module.exports.login = async (req, res) => {
 	}
 };
 
-// Fonction pour afficher tout les utilisateurs en tant qu'admin
+// Fonction pour afficher tout les utilisateurs (admin)
 module.exports.getAllUsers = async (req, res) => {
 	try {
 		if (req.user.role !== 'admin') {
@@ -221,7 +221,7 @@ module.exports.getAllUsers = async (req, res) => {
 	}
 };
 
-// Fonction pour afficher un utilisateur avec son id en tant qu'admin
+// Fonction pour afficher un utilisateur avec son id (admin)
 module.exports.getUserById = async (req, res) => {
 	try {
 		if (req.user.role !== 'admin') {
@@ -248,7 +248,7 @@ module.exports.getUserById = async (req, res) => {
 	}
 };
 
-// Fonction pour la connection pour le dashboard
+// Fonction pour acceder à une route protégée (admin)
 module.exports.dashboard = async (req, res) => {
 	if (req.user.role === 'admin') {
 		// Definition de req.isAdmin sera egal a true pour les administrateur
@@ -263,15 +263,15 @@ module.exports.dashboard = async (req, res) => {
 	}
 };
 
-// Fonction pour la récupération des données user
-module.exports.getProfilUser = async (req, res) => {
+// Fonction pour voir mon profil
+module.exports.getProfile = async (req, res) => {
 	try {
 		const userId = req.params.id;
 
 		const user = await authModel.findById(userId);
 
 		if (!user) {
-			res.status(404).json({ message: 'profil utilisateur inexistant' });
+			res.status(404).json({ message: 'Profil utilisateur inexistant' });
 		}
 
 		// Utilisateur trouvé avec succès
@@ -281,3 +281,72 @@ module.exports.getProfilUser = async (req, res) => {
 		res.status(500).json({ message: "Erreur lors de la récupération de l'utilisateur" });
 	}
 };
+
+// fonction pour modifier un utilisateur (admin)
+module.exports.updateUser = async (req, res) => {
+	try {
+		if (req.user.role !== 'admin') {
+			// Retourne un message d'erreur
+			return res.status(403).json({
+				message: 'Action non autorisée. Seul un admin peut modifier un utilisateur',
+			});
+		}
+		// Déclaration de variable pour la gestion des erreurs de validation
+		const errors = validationResult(req);
+
+		// Vérification si il y a une des erreurs de validation
+		if (!errors.isEmpty()) {
+			return res.status(400).json({ errors: errors.array() });
+		}
+
+		// Recupération de l'id de l'utilisateur pour le mettre en param de requête
+		const userId = req.params.id;
+
+		// Récupération des données du formulaire
+		const { lastname, firstname, birthday, address, zipcode, city, phone, email } = req.body;
+
+		// Vérifié si l'utilisateur existe avant la mise à jour
+		const existingUser = await authModel.findById(userId);
+
+		// Condition si l'utilisateur n'existe pas en base de données
+		if (!existingUser) {
+			return res.status(404).json({ message: 'Utilisateur non trouvé' });
+		}
+
+		// Verifier si une nouvelle image est télécharger, mettre à jour le chemin de l'image
+		if (req.file) {
+			if (existingUser.avatarPublicId) {
+				await cloudinary.uploader.destroy(existingUser.avatarPublicId);
+			}
+			// Redonne une nouvelle url et un nouvel id a l'image
+			existingUser.avatarUrl = req.cloudinaryUrl;
+			existingUser.avatarPublicId = req.file.public_id;
+		}
+
+		// Mettre à jour les informations de l'utilisateur
+		existingUser.lastname = lastname;
+		existingUser.firstname = firstname;
+		existingUser.birthday = birthday;
+		existingUser.address = address;
+		existingUser.zipcode = zipcode;
+		existingUser.city = city;
+		existingUser.phone = phone;
+
+		// Mettre à jour l'email iniquement si fourni dans la requête
+		if (email) {
+			existingUser.email = email;
+		}
+
+		// Sauvergarder les modifications
+		await existingUser.save();
+
+		// Code de success
+		res.status(200).json({ message: "Profil de l'utilisateur mise à jour avec success", user: existingUser });
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ message: "Erreur lors de la mise à jour du profil de l'utilisateur" });
+	}
+};
+
+// Fonction pour supprimer un utilisateur (admin)
+module.exports.deleteUser = async (req, res) => {};
