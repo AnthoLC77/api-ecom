@@ -74,6 +74,19 @@ const authSchema = new mongoose.Schema({
 		default: 'user',
 	},
 
+	isEmailVerified: {
+		type: Boolean,
+		defaut: false,
+	},
+
+	emailVerificationToken: {
+		type: String,
+	},
+
+	emailVerificationTokenExpires: {
+		type: Date,
+	},
+
 	imagePublicId: {
 		type: String,
 		Default: null,

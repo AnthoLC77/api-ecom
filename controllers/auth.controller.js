@@ -8,6 +8,40 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 // Import du module cloudinary
 const cloudinary = require('cloudinary').v2;
+// Import du nodemailer pour l'envoie de mail de verif
+const nodemailer = require('nodemailer');
+// Import de crypto pour la génération du token
+const crypto = require('crypto');
+
+const transporter = nodemailer.createTransport({
+	host: 'sandbox.smtp.mailtrap.io',
+	port: 2525,
+	auth: {
+		user: 'cd1b7627b1b233',
+		pass: '583139c0eee233',
+	},
+});
+
+// Déclaration de variable pour générer un token avec crypto
+const generateVerificationToken = () => {
+	return crypto.randomBytes(32).toString('hex');
+};
+
+// Fonction de la vérification de l'envoi email
+const sendVerificationEmail = async (to, verificationToken) => {
+	// Variable qui va contenir le lien de vérification
+	const verificationLink = `http://localhost:5000/verify?token=${verificationToken}`;
+
+	const mailOptions = {
+		from: 'verificationEmail@gmail.fr',
+		to,
+		subject: 'Mail de validation de compte',
+		text: `Merci de vérifier votre email en cliquant sur ce <a href=${verificationLink}>Lien</a>`,
+		html: `<p> Merci de cliquer sur le lien pour verifier votre adresse mail et pouvoir vous connecter  </p>`,
+	};
+
+	await transporter.sendMail(mailOptions);
+};
 
 // Fonction pour l'inscription
 module.exports.register = async (req, res) => {
@@ -33,6 +67,9 @@ module.exports.register = async (req, res) => {
 		const existingAuth = await authModel.findOne({ email });
 		// Renvoie une erreur si l'email existe deja
 		if (existingAuth) {
+			if (req.file && req.file.public_id) {
+				await cloudinary.uploader.destroy(req.file.public_id);
+			}
 			return res.status(400).json({
 				message: 'Votre email existe deja en base de données. Veuillez en choisir un autre',
 			});
@@ -57,11 +94,31 @@ module.exports.register = async (req, res) => {
 			avatarPublicId,
 		});
 
+		// Generation de la vérification de token sécurisé
+		const verificationToken = generateVerificationToken();
+
+		// Sauvegarder le token gérérer dans la BDD et l'associé à l'utilisateur
+		auth.emailVerificationToken = verificationToken;
+		auth.emailVerificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+		// Sauvegarder
+		await auth.save();
+
+		// Envoyer la vérification d'email
+		await sendVerificationEmail(auth.email, verificationToken);
+
 		// Renvoie une reponse positive si l'utilisateur est bien enregistré
-		res.status(201).json({ message: 'Utilisateur crée avec succès', auth });
+		res.status(201).json({
+			message: `Utilisateur crée avec succès, verifier votre email pour valider votre compte : ${auth.email}`,
+			auth,
+		});
 	} catch (err) {
 		// Renvoie une erreur si il y a un probleme lors de l'enregistrement de l'utilisateur
 		console.error(err);
+		// Supprimer l'image télécharger si elle existe
+		if (req.file && req.file.public_id) {
+			await cloudinary.uploader.destroy(req.file.public_id);
+		}
 		res.status(500).json({
 			message: "Erreur lors de l'enregistrement de l'utilisateur",
 		});
@@ -341,10 +398,15 @@ module.exports.updateUser = async (req, res) => {
 		await existingUser.save();
 
 		// Code de success
-		res.status(200).json({ message: "Profil de l'utilisateur mise à jour avec success", user: existingUser });
+		res.status(200).json({
+			message: "Profil de l'utilisateur mise à jour avec success",
+			user: existingUser,
+		});
 	} catch (error) {
 		console.error(error);
-		res.status(500).json({ message: "Erreur lors de la mise à jour du profil de l'utilisateur" });
+		res.status(500).json({
+			message: "Erreur lors de la mise à jour du profil de l'utilisateur",
+		});
 	}
 };
 

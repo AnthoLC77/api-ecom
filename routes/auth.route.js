@@ -10,10 +10,10 @@ router.post('/register', cloudinaryUpload, authController.register);
 router.post('/login', authController.login);
 
 // Route pour la modification du profil
-router.put('/update/:id', cloudinaryUpload, authController.update);
+router.put('/update/:id', authMiddleware.verifToken,  cloudinaryUpload, authController.update);
 
 // Route pour supprimer notre profil
-router.delete('/delete/:id', authController.delete);
+router.delete('/delete/:id',authMiddleware.verifToken , authController.delete);
 
 // Route pour afficher tout les utilisateur (admin)
 router.get('/all-users', authMiddleware.authenticate, authController.getAllUsers);
@@ -33,7 +33,7 @@ router.put(
 router.delete('/delete-user/:id', authMiddleware.authenticate, authController.deleteUser);
 
 // Route pour afficher son profil
-router.get('/profile/:id', authController.getProfile);
+router.get('/profile/:id', authMiddleware.verifToken, authController.getProfile);
 
 // Route proteger dashboard
 router.get('/dashboard', authMiddleware.authenticate, authController.dashboard);

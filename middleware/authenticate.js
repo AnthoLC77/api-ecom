@@ -37,3 +37,37 @@ module.exports.authenticate = async (req, res, next) => {
 		res.status(500).json({ message: "Erreur lors de l'authentification" });
 	}
 };
+
+// Fonction pour valider le token d'authentification
+module.exports.verifToken = async (req, res, next) => {
+	try {
+		// Definition de la variable pour l'autorisation
+		const authHeader = req.header('Authorization');
+		// Condition qui vérifie la variable et qui ajoute un bearer comme exeption
+		if (!authHeader || !authHeader.startsWith('Bearer ')) {
+			return res.status(401).json({
+				message: 'Vous devez être connecté pour éffectuer cette action sur votre profil',
+			});
+		}
+
+		// Extraction du token sans le prefixe 'Bearer'
+		const token = authHeader.split(' ')[1];
+
+		// Vérifier la validité du token en utilisant JWT
+		jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+			// Si une erreur survient pendant la vérification, renvoyer une erreur
+			if (err) {
+				return res.status(401).json({ message: 'Token invalide' });
+			}
+			// Si la vérification est réussie, ajouter les informations du token dans la requête
+			req.tokenInfo = decoded;
+
+			// Passer à la prochaine étape du mddlware ou à de la route
+			next();
+		});
+
+	} catch (err) {
+		console.error('Erreur lors de la récupération du token : ', err.message);
+		res.status(500).json({ message: 'Erreur lors de la récupération du token' });
+	}
+};
