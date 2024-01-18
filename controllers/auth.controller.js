@@ -222,6 +222,47 @@ module.exports.forgotPassword = async (req, res) => {
 	}
 };
 
+// Fonction pour réinitialiser le mot de passe
+module.exports.updatePassword = async (req, res) => {
+	try {
+		// Récupération du token pour le mettre en params url
+		const { token } = req.params;
+		// Ajout de deux nouveaux champs dans la requête
+		const { newPassword, confirmNewPassword } = req.body;
+
+		// Vérifier si les champs de mot de passe correspondent
+		if (newPassword !== confirmNewPassword) {
+			return res.status(400).json({ message: 'Les mot de passe ne correspondent pas' });
+		}
+		// Trouver l'utilisateur par le token de réinitialisation de mot de passe
+		const user = await authModel.findOne({
+			resetPasswordToken: token,
+			resetPasswordTokenExpires: { $gt: Date.now() },
+		});
+
+		// Verifier si le token est valide
+		if (!user) {
+			return res.status(400).json({ message: 'token de réinitilisation invalide ou expiré' });
+		}
+
+		// Mettre à jour le mot de passe
+		user.password = newPassword;
+
+		// Réinitialiser le token et l'expiration
+		user.resetPasswordToken = undefined;
+		user.resetPasswordTokenExpires = undefined;
+
+		// Enregister les modifications
+		await user.save();
+
+		// Envoyer une reponse de success
+		res.status(200).json({ message: 'Mot de passe réinitialisé avec success' });
+	} catch (error) {
+		console.error('Erreur lors de la réinitialisation du mot de passe ', error.message);
+		res.status(500).json({ message: 'Erreur lors de la réinitialisation du mot de passe' });
+	}
+};
+
 // Fonction pour la connexion
 module.exports.login = async (req, res) => {
 	try {
