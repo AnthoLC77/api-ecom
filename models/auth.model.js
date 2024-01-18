@@ -87,6 +87,16 @@ const authSchema = new mongoose.Schema({
 		type: Date,
 	},
 
+	resetPasswordToken: {
+		type: String,
+		default: null,
+	},
+
+	resetPasswordTokenExpires: {
+		type: Date,
+		default: null,
+	},
+
 	imagePublicId: {
 		type: String,
 		Default: null,

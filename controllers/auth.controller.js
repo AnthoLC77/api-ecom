@@ -27,13 +27,33 @@ const generateVerificationToken = () => {
 	return crypto.randomBytes(32).toString('hex');
 };
 
+// Déclaration de variable pour générer un token password avec crypto
+const generateVerificationTokenPassword = () => {
+	return crypto.randomBytes(32).toString('hex');
+};
+
+// Fonction de vérification pour la réinitialisation du mot de passe
+const sendResetPassword = async (to, resetPasswordToken) => {
+	// Variable qui va contenir le lien de vérification
+	const resetPasswordLink = `http://localhost:5000/forgot-password?token=${resetPasswordToken}`;
+	const mailOptions = {
+		from: 'forgot-password@gmail.com',
+		to,
+		subject: 'Réinitialisation du mot de passe',
+		text: `Réinitialisation dde votre mot de passe en cliquant sur ce <a href=${resetPasswordLink}>Lien</a>`,
+		html: `<p> Merci de cliquer sur le lien pour réinitialisation votre du mot de passe  </p>`,
+	};
+
+	await transporter.sendMail(mailOptions);
+};
+
 // Fonction de la vérification de l'envoi email
 const sendVerificationEmail = async (to, verificationToken) => {
 	// Variable qui va contenir le lien de vérification
 	const verificationLink = `http://localhost:5000/verify?token=${verificationToken}`;
 
 	const mailOptions = {
-		from: 'verificationEmail@gmail.fr',
+		from: 'verificationEmail@gmail.com',
 		to,
 		subject: 'Mail de validation de compte',
 		text: `Merci de vérifier votre email en cliquant sur ce <a href=${verificationLink}>Lien</a>`,
@@ -125,87 +145,80 @@ module.exports.register = async (req, res) => {
 	}
 };
 
-// Fonction pour la modification du profil
-module.exports.update = async (req, res) => {
+// Fonction pour la vérification email
+module.exports.verifyEmail = async (req, res) => {
 	try {
-		// Déclaration de variable pour la gestion des erreurs de validation
-		const errors = validationResult(req);
+		// Récupération du token pour le mettre en paramètre d'url
+		const { token } = req.params;
 
-		// Vérification si il y a une des erreurs de validation
-		if (!errors.isEmpty()) {
-			return res.status(400).json({ errors: errors.array() });
-		}
+		// Trouver l'utilisateur avec le token associé
+		const user = await authModel.findOne({ emailVerificationToken: token });
 
-		// Recupération de l'id de l'utilisateur pour le mettre en param de requête
-		const userId = req.params.id;
-
-		// Récupération des données du formulaire
-		const { lastname, firstname, birthday, address, zipcode, city, phone, email } = req.body;
-
-		// Vérifié si l'utilisateur existe avant la mise à jour
-		const existingUser = await authModel.findById(userId);
-
-		// Condition si l'utilisateur n'existe pas en base de données
-		if (!existingUser) {
+		if (!user) {
 			return res.status(404).json({ message: 'Utilisateur non trouvé' });
 		}
 
-		// Verifier si une nouvelle image est télécharger, mettre à jour le chemin de l'image
-		if (req.file) {
-			if (existingUser.avatarPublicId) {
-				await cloudinary.uploader.destroy(existingUser.avatarPublicId);
-			}
-			// Redonne une nouvelle url et un nouvel id a l'image
-			existingUser.avatarUrl = req.cloudinaryUrl;
-			existingUser.avatarPublicId = req.file.public_id;
+		// Vérifier si le token n'a pas expiré
+		if (user.emailVerificationTokenExpires && user.emailVerificationTokenExpires < Date.now()) {
+			return res.status(400).json({ message: 'Le token à expiré' });
 		}
 
-		// Mettre à jour les informations de l'utilisateur
-		existingUser.lastname = lastname;
-		existingUser.firstname = firstname;
-		existingUser.birthday = birthday;
-		existingUser.address = address;
-		existingUser.zipcode = zipcode;
-		existingUser.city = city;
-		existingUser.phone = phone;
+		// Mettre à jour isEmailVerified à true et sauvegarder
+		user.isEmailVerified = true;
+		// Effacer le token après vérification
+		user.emailVerificationToken = undefined;
+		// Effacer la date d'expiration
+		user.emailVerificationTokenExpires = undefined;
+		// Sauvegarder
+		await user.save();
 
-		// Mettre à jour l'email iniquement si fourni dans la requête
-		if (email) {
-			existingUser.email = email;
-		}
-
-		// Sauvergarder les modifications
-		await existingUser.save();
-
-		// Code de success
-		res.status(200).json({ message: 'Profil mise à jour avec success', user: existingUser });
+		// Message de réussite
+		res.status(200).json({ message: 'Email verifié avec succès' });
 	} catch (error) {
-		console.error(error);
-		res.status(500).json({ message: 'Erreur lors de la mise à jour du profil' });
+		console.error("Erreur lors de la verification de l'email : ", error.message);
+		res.status(500).json({ message: "Erreur lors de la vérification de l'email" });
 	}
 };
 
-// Fonction pour supprimer notre profil
-module.exports.delete = async (req, res) => {
+// Fonction pour la demande de réinitialisation de mot de passe par email
+module.exports.forgotPassword = async (req, res) => {
 	try {
-		// Déclaration de la variable qui va rechercher l'id user pour le mettre en params url
-		const userId = req.params.id;
+		// Email rentré quand le mot de passe est oublié
+		const { email } = req.body;
 
-		// Déclaration de variable qui va vérifier sur l'utilisateur existe
-		const existingUser = await authModel.findById(userId);
+		// Rechercher l'utilisateur par email
+		const user = await authModel.findOne({ email });
 
-		// Suppression de l'avatar de cloudinary si celui existe
-		if (existingUser.avatarPublicId) {
-			await cloudinary.uploader.destroy(existingUser.avatarPublicId);
+		// Condition si l'email ne correspond pas avec un user dans la BDD
+		if (!user) {
+			return res
+				.status(404)
+				.json({ message: 'Aucun utilisateur ne correspond avec cet email' });
 		}
-		// Supprimer l'utilisateur de la basse de données
-		await authModel.findByIdAndDelete(userId);
 
-		// Message de success
-		res.status(200).json({ message: 'Utilisateur supprimé avec success' });
+		// Générer un token de réinitialisation de mot de passe sécurisé
+		const resetPasswordToken = generateVerificationTokenPassword();
+
+		// Sauvegarder le token de réinitialisation de mot de passe et l'expiration dans la BDD
+		user.resetPasswordToken = resetPasswordToken;
+		user.resetPasswordTokenExpires = new Date(Date.now() + 60 * 60 * 1000);
+		await user.save();
+
+		// Envoyer un email avec le lien de réinitialisation de mot de passe
+		await sendResetPassword(user.email, resetPasswordToken);
+
+		// Message de réussite
+		res.status(200).json({
+			message: 'Email de réinitialisation de mot de passe envoyé avec success',
+		});
 	} catch (error) {
-		console.error(error);
-		res.status(500).json({ message: "Erreur lors de la suppression de l'utilisateur" });
+		console.error(
+			'Erreur lors de la demande de réinitialisation de mot de passe',
+			error.message
+		);
+		res.status(500).json({
+			message: 'Erreur lors de la demande de réinitialisation de mot de passe',
+		});
 	}
 };
 
@@ -256,6 +269,96 @@ module.exports.login = async (req, res) => {
 		// Renvoie une erreur si il y a un problème lors de la connexion de l'utilisateur
 		console.error('Erreur lors de la connexion : ', error.message);
 		res.status(500).json({ message: 'Erreur lors de la connexion' });
+	}
+};
+
+// Fonction pour la modification du profil
+module.exports.update = async (req, res) => {
+	try {
+		// Déclaration de variable pour la gestion des erreurs de validation
+		const errors = validationResult(req);
+
+		// Vérification si il y a une des erreurs de validation
+		if (!errors.isEmpty()) {
+			return res.status(400).json({ errors: errors.array() });
+		}
+
+		// Recupération de l'id de l'utilisateur pour le mettre en param de requête
+		const userId = req.params.id;
+
+		// Récupération des données du formulaire
+		const { lastname, firstname, birthday, address, zipcode, city, phone, email, newPassword } =
+			req.body;
+
+		// Vérifié si l'utilisateur existe avant la mise à jour
+		const existingUser = await authModel.findById(userId);
+
+		// Condition si l'utilisateur n'existe pas en base de données
+		if (!existingUser) {
+			return res.status(404).json({ message: 'Utilisateur non trouvé' });
+		}
+
+		// Verifier si une nouvelle image est télécharger, mettre à jour le chemin de l'image
+		if (req.file) {
+			if (existingUser.avatarPublicId) {
+				await cloudinary.uploader.destroy(existingUser.avatarPublicId);
+			}
+			// Redonne une nouvelle url et un nouvel id a l'image
+			existingUser.avatarUrl = req.cloudinaryUrl;
+			existingUser.avatarPublicId = req.file.public_id;
+		}
+
+		// Mettre à jour les informations de l'utilisateur
+		existingUser.lastname = lastname;
+		existingUser.firstname = firstname;
+		existingUser.birthday = birthday;
+		existingUser.address = address;
+		existingUser.zipcode = zipcode;
+		existingUser.city = city;
+		existingUser.phone = phone;
+
+		// Mettre à jour l'email iniquement si fourni dans la requête
+		if (email) {
+			existingUser.email = email;
+		}
+
+		// Mettre a jour le mot de passe uniquement si fourni dans la requête
+		if (newPassword) {
+			existingUser.password = newPassword;
+		}
+
+		// Sauvergarder les modifications
+		await existingUser.save();
+
+		// Code de success
+		res.status(200).json({ message: 'Profil mise à jour avec success', user: existingUser });
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ message: 'Erreur lors de la mise à jour du profil' });
+	}
+};
+
+// Fonction pour supprimer notre profil
+module.exports.delete = async (req, res) => {
+	try {
+		// Déclaration de la variable qui va rechercher l'id user pour le mettre en params url
+		const userId = req.params.id;
+
+		// Déclaration de variable qui va vérifier sur l'utilisateur existe
+		const existingUser = await authModel.findById(userId);
+
+		// Suppression de l'avatar de cloudinary si celui existe
+		if (existingUser.avatarPublicId) {
+			await cloudinary.uploader.destroy(existingUser.avatarPublicId);
+		}
+		// Supprimer l'utilisateur de la basse de données
+		await authModel.findByIdAndDelete(userId);
+
+		// Message de success
+		res.status(200).json({ message: 'Utilisateur supprimé avec success' });
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ message: "Erreur lors de la suppression de l'utilisateur" });
 	}
 };
 
