@@ -28,7 +28,7 @@ describe('Testing route /api/verify-email/:token', () => {
 	// Avant tous les tests, récuperer un utilisateur avec un token valide dans la base de données
 	beforeAll(async () => {
 		const user = await authModel.findOne({
-			email: 'dayone@gmail.com',
+			email: 'daytwo@gmail.com',
 		});
 		if (user) {
 			verificationToken = user.emailVerificationToken;
