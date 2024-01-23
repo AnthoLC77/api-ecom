@@ -121,6 +121,7 @@ module.exports.register = async (req, res) => {
 		auth.emailVerificationToken = verificationToken;
 		auth.emailVerificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
+		auth.isEmailVerified = false;
 		// Sauvegarder
 		await auth.save();
 
@@ -129,7 +130,7 @@ module.exports.register = async (req, res) => {
 
 		// Renvoie une reponse positive si l'utilisateur est bien enregistré
 		res.status(201).json({
-			message: `Utilisateur crée avec succès, verifier votre email pour valider votre compte : ${auth.email}`,
+			message: `Utilisateur crée avec succès, verifier votre email pour valider votre compte : `,
 			auth,
 		});
 	} catch (err) {

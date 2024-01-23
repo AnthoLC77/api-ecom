@@ -48,10 +48,10 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Utilisation  des routes pour l'authentification
-app.use('/api', authRoutes);
+app.use('/', authRoutes);
 
 // Utilisation des routes pour la création des produits
-app.use('/api', productRoutes);
+app.use('/', productRoutes);
 
 // Définition du port de demarrage du serveur
 const PORT = process.env.PORT || 5200;
@@ -70,3 +70,5 @@ const start = async () => {
 
 // Appel de la fonction pour demarrer le serveur
 start();
+
+module.exports = app;

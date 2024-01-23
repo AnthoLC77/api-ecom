@@ -4,47 +4,47 @@ const authMiddleware = require('../middleware/authenticate');
 const cloudinaryUpload = require('../middleware/cloudinaryUpload');
 
 // Route pour l'inscription
-router.post('/register', cloudinaryUpload, authController.register);
+router.post('/api/register', cloudinaryUpload, authController.register);
 
 // Route pour vérifier l'email de validation
-router.get('/verify-email/:token', authController.verifyEmail);
+router.get('/api/verify-email/:token', authController.verifyEmail);
 
 // Route pour envoyer un email de réinitialisation de mot de passe
-router.post('/forgot-password', authController.forgotPassword);
+router.post('/api/forgot-password', authController.forgotPassword);
 
 // Route pour réinitialiser le mot de passe
-router.put('/update-password/:token', authController.updatePassword);
+router.put('/api/update-password/:token', authController.updatePassword);
 
 // Route pour connexion
-router.post('/login', authController.login);
+router.post('/api/login', authController.login);
 
 // Route pour la modification du profil
-router.put('/update/:id', authMiddleware.verifToken, cloudinaryUpload, authController.update);
+router.put('/api/update/:id', authMiddleware.verifToken, cloudinaryUpload, authController.update);
 
 // Route pour supprimer notre profil
-router.delete('/delete/:id', authMiddleware.verifToken, authController.delete);
+router.delete('/api/delete/:id', authMiddleware.verifToken, authController.delete);
 
 // Route pour afficher tout les utilisateur (admin)
-router.get('/all-users', authMiddleware.authenticate, authController.getAllUsers);
+router.get('/api/all-users', authMiddleware.authenticate, authController.getAllUsers);
 
 // Route pour afficher un utilisateur par son ID (admin)
-router.get('/one-user/:id', authMiddleware.authenticate, authController.getUserById);
+router.get('/api/one-user/:id', authMiddleware.authenticate, authController.getUserById);
 
 // Route pour modifier le profil d'un utilisateur (admin)
 router.put(
-	'/update-user/:id',
+	'/api/update-user/:id',
 	authMiddleware.authenticate,
 	cloudinaryUpload,
 	authController.updateUser
 );
 
 // Route pour supprimer le profil d'un utilisateur (admin)
-router.delete('/delete-user/:id', authMiddleware.authenticate, authController.deleteUser);
+router.delete('/api/delete-user/:id', authMiddleware.authenticate, authController.deleteUser);
 
 // Route pour afficher son profil
-router.get('/profile/:id', authMiddleware.verifToken, authController.getProfile);
+router.get('/api/profile/:id', authMiddleware.verifToken, authController.getProfile);
 
 // Route proteger dashboard
-router.get('/dashboard', authMiddleware.authenticate, authController.dashboard);
+router.get('/api/dashboard', authMiddleware.authenticate, authController.dashboard);
 
 module.exports = router;
