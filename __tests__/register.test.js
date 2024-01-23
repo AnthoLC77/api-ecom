@@ -35,7 +35,7 @@ describe('Register route testing', () => {
 			.field('zipcode', '77420')
 			.field('city', 'Torcy')
 			.field('phone', '0102030405')
-			.field('email', 'te@gmail.com')
+			.field('email', 'dayone@gmail.com')
 			.field('password', '123456')
 			// Attache un fichier à la requête (exemple image)
 			.attach('image', path.resolve(__dirname, '../images/shoes.jpg'));

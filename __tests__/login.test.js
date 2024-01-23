@@ -32,7 +32,7 @@ describe('Login route testing', () => {
 		// On suppose que nous avons un utilisateur en base de données
 		const existingUser = {
 			_id: new mongoose.Types.ObjectId(),
-			email: 'exemple@gmail.com',
+			email: 'dayone@gmail.com',
 			// Hachage du mot de passe pour simuler le stockage en BDD
 			password: await bcrypt.hash('123456', 10),
 		};
@@ -40,7 +40,7 @@ describe('Login route testing', () => {
 		jest.spyOn(authModel, 'findOne').mockResolvedValue(existingUser);
 		// Effectuer la requête de connexion a la route /api/login
 		const response = await request(app).post('/api/login').send({
-			email: 'exemple@gmail.com',
+			email: 'dayone@gmail.com',
 			// Fournir le mot de passe en clair pour la comparaison
 			password: '123456',
 		});
