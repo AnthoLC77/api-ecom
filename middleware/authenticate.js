@@ -23,11 +23,11 @@ module.exports.authenticate = async (req, res, next) => {
 		const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
 		// Déclaration d'une variable qui va recuperer l'id de l'user et lui assigner un token
-		const user = await autheModel.findById(decoded.user.id);
+		const user = await autheModel.findById(decoded.userId);
 
 		// Si il n'y a pas d'utilisateur renvoie un message
 		if (!user) {
-			return res.status(400).json({ message: 'Utilisateur non trouvé' });
+			return res.status(403).json({ message: 'Utilisateur non trouvé' });
 		}
 		// Le else n'est pas souhaitable car en locale tout vas fonctionner mais au déploiement il y aura une erreur "req.user is not a function"
 		req.user = user;
@@ -65,7 +65,6 @@ module.exports.verifToken = async (req, res, next) => {
 			// Passer à la prochaine étape du mddlware ou à de la route
 			next();
 		});
-
 	} catch (err) {
 		console.error('Erreur lors de la récupération du token : ', err.message);
 		res.status(500).json({ message: 'Erreur lors de la récupération du token' });

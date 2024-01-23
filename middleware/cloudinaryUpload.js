@@ -22,7 +22,8 @@ const cloudinaryUpload = async (req, res, next) => {
 			}
 			// Vérification de l'existence du fichier dans la requête
 			if (!req.file) {
-				return res.status(400).json({ message: 'Veuillez télécharger une image' });
+				console.log('Aucun fichier à téléverser, poursuite du middleware');
+				return next();
 			}
 			try {
 				console.log('Début du téléversement sur cloudinary');
