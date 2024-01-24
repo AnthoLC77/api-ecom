@@ -397,7 +397,7 @@ module.exports.delete = async (req, res) => {
 		await authModel.findByIdAndDelete(userId);
 
 		// Message de success
-		res.status(200).json({ message: 'Utilisateur supprimé avec success' });
+		res.status(200).json({ message: 'Profil supprimé avec success' });
 	} catch (error) {
 		console.error(error);
 		res.status(500).json({ message: "Erreur lors de la suppression de l'utilisateur" });
