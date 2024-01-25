@@ -15,7 +15,7 @@ function generateAuthToken(userId, role) {
 	const expiresIn = '1h';
 
 	// Utilisation de la bibliothèque jwt pour générer le token
-	return jwt.sign({ userId, role }, secretKey, { expiresIn });
+	return jwt.sign({ user: { id: userId }, role }, secretKey, { expiresIn });
 }
 
 // Connexion à la base de données avant l'execution des tests

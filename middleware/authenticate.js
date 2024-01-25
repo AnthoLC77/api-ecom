@@ -23,7 +23,7 @@ module.exports.authenticate = async (req, res, next) => {
 		const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
 		// Déclaration d'une variable qui va recuperer l'id de l'user et lui assigner un token
-		const user = await autheModel.findById(decoded.userId);
+		const user = await autheModel.findById(decoded.user.id);
 
 		// Si il n'y a pas d'utilisateur renvoie un message
 		if (!user) {

@@ -7,7 +7,7 @@ const app = require('../server');
 // Import de jwt
 const jwt = require('jsonwebtoken');
 // Import model
-const authModel = require('../models/auth.model');
+const authModel = require('../models/product.model');
 
 // Fonction utilitaire pour generer un token d'authentification
 function generateAuthToken(userId) {
@@ -15,7 +15,7 @@ function generateAuthToken(userId) {
 	const expiresIn = '1h';
 
 	// Utilisation de la bibliothèque jwt pour générer le token
-	return jwt.sign( {user: { id: userId }}, secretKey, { expiresIn });
+	return jwt.sign({ user: { id: userId } }, secretKey, { expiresIn });
 }
 
 // Connexion à la base de données avant l'execution des tests
@@ -33,27 +33,41 @@ afterAll(async () => {
 });
 
 // Bloc de test pour récuperer tout les utilisateurs
-describe('Delete Profile API', () => {
-	it('Should allow deleting user profil for admin', async () => {
-		// Id du profil utilisateur à supprimer
-		const userIdToDelete = '65b0d8a47c60c09ecb180d60';
+describe('Update Product API', () => {
+	it('Should allow updating product for admin', async () => {
+		// Id de l'utilisateur admin dans la base de données
+		const adminUserId = '65af8bf4ff268149c68aaff8';
 
-		const authToken = generateAuthToken(userIdToDelete);
+		// Id de l"user a vérifier
+		const productIdToUpdate = '65b0ea1d5c0a65527d30f047';
+
+		const authToken = generateAuthToken(adminUserId);
 
 		// Faire la demande pour recuperer tout les users
 		const response = await request(app)
-			.delete(`/api/delete/${userIdToDelete}`)
-			.set('Authorization', `Bearer ${authToken}`);
+			.put(`/api/update-product/${productIdToUpdate}`)
+			.set('Authorization', `Bearer ${authToken}`)
+			.send({
+				title: 'NouveauTitre',
+				description: 'NouvelleDescription',
+				price: '30',
+			});
 
 		// Log de la réponse
 		console.log(response.body);
 
 		// S'assurer que la demande est réussie
 		expect(response.status).toBe(200);
-		expect(response.body).toHaveProperty('message', 'Profil supprimé avec success');
+		expect(response.body).toHaveProperty(
+			'message',
+			'Modification du produit effectué avec success !'
+		);
+		expect(response.body).toHaveProperty('product');
 
-		// S'assurer que le profil utilisateur à bien été supprimé de la BDD!
-		const deleteUser = await authModel.findById(userIdToDelete);
-		expect(deleteUser).toBeNull();
+		// S'assurer que les information de l'utilisateur ont bien été mis à jour !
+		const updateProduct = await authModel.findById(productIdToUpdate);
+		expect(updateProduct.title).toBe('NouveauTitre');
+		expect(updateProduct.description).toBe('NouvelleDescription');
+		expect(updateProduct.price).toBe('30');
 	});
 });
