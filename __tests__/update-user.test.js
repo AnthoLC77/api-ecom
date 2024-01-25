@@ -39,7 +39,7 @@ describe('Update User API', () => {
 		const adminUserId = '65af8bf4ff268149c68aaff8';
 
 		// Id de l"user a vérifier
-		const userIdToUpdate = '65ae669c1388cee182fde8a4';
+		const userIdToUpdate = '65b0deb90b110bf697f44691';
 
 		const authToken = generateAuthToken(adminUserId);
 

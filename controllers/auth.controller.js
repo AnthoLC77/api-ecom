@@ -1,7 +1,7 @@
 // Import du mode utilisateur
 const authModel = require('../models/auth.model');
 // Import de la validation des données
-const { validationResult } = require('express-validator');
+const { validationResult, check } = require('express-validator');
 // Import du modèle de hachage bcrypt
 const bcrypt = require('bcryptjs');
 // Import du module jwt pour les tokens
@@ -12,6 +12,7 @@ const cloudinary = require('cloudinary').v2;
 const nodemailer = require('nodemailer');
 // Import de crypto pour la génération du token
 const crypto = require('crypto');
+const { default: isEmail } = require('validator/lib/isEmail');
 
 const transporter = nodemailer.createTransport({
 	host: 'sandbox.smtp.mailtrap.io',
@@ -67,6 +68,17 @@ const sendVerificationEmail = async (to, verificationToken) => {
 module.exports.register = async (req, res) => {
 	// Validation des données d'entrée
 	try {
+		// Ces lignes vont vérifier que les champs ne soient pas vide au moment de l'execution de la requête
+		await check('lastname', 'Veuillez entrer votre nom').notEmpty().run(req);
+		await check('firstname', 'Veuillez entrer votre prenom').notEmpty().run(req);
+		await check('birthday', 'Veuillez entrer votre birthday').notEmpty().run(req);
+		await check('address', 'Veuillez entrer votre adresse').notEmpty().run(req);
+		await check('zipcode', 'Veuillez entrer votre code postale').notEmpty().run(req);
+		await check('city', 'Veuillez entrer votre ville').notEmpty().run(req);
+		await check('phone', 'Veuillez entrer votre téléphone').notEmpty().run(req);
+		await check('email', 'Veuillez entrer votre email').notEmpty().run(req);
+		await check('password', 'Veuillez entrer votre mot de passe').notEmpty().run(req);
+
 		// Recupération des erreurs de validations
 		const errors = validationResult(req);
 		// Vérification si il y a des erreurs de validation
@@ -149,6 +161,16 @@ module.exports.register = async (req, res) => {
 // Fonction pour la vérification email
 module.exports.verifyEmail = async (req, res) => {
 	try {
+		// Validation du paramètres token
+		await check('token', 'token de vérification invalide').notEmpty().isString().run(req);
+
+		const errors = validationResult(req);
+		// Vérification si il y a des erreurs de validation
+		if (!errors.isEmpty()) {
+			// Renvoi des erreurs de validation
+			return res.status(400).json({ errors: errors.array() });
+		}
+
 		// Récupération du token pour le mettre en paramètre d'url
 		const { token } = req.params;
 
@@ -184,6 +206,15 @@ module.exports.verifyEmail = async (req, res) => {
 // Fonction pour la demande de réinitialisation de mot de passe par email
 module.exports.forgotPassword = async (req, res) => {
 	try {
+		// Validation du paramètres token
+		await check('email', 'Veuillez entrer un email invalide').isEmail().run(req);
+
+		const errors = validationResult(req);
+		// Vérification si il y a des erreurs de validation
+		if (!errors.isEmpty()) {
+			// Renvoi des erreurs de validation
+			return res.status(400).json({ errors: errors.array() });
+		}
 		// Email rentré quand le mot de passe est oublié
 		const { email } = req.body;
 
@@ -231,6 +262,19 @@ module.exports.updatePassword = async (req, res) => {
 		// Ajout de deux nouveaux champs dans la requête
 		const { newPassword, confirmNewPassword } = req.body;
 
+		// Validation du paramètres token
+		await check('newPassword', 'Le nouveau mot de passe est requis').notEmpty().run(req);
+		await check('confirmNewPassword', 'Le mot de passe de confirmation est requis')
+			.notEmpty()
+			.run(req);
+
+		const errors = validationResult(req);
+		// Vérification si il y a des erreurs de validation
+		if (!errors.isEmpty()) {
+			// Renvoi des erreurs de validation
+			return res.status(400).json({ errors: errors.array() });
+		}
+
 		// Vérifier si les champs de mot de passe correspondent
 		if (newPassword !== confirmNewPassword) {
 			return res.status(400).json({ message: 'Les mot de passe ne correspondent pas' });
@@ -267,6 +311,9 @@ module.exports.updatePassword = async (req, res) => {
 // Fonction pour la connexion
 module.exports.login = async (req, res) => {
 	try {
+		await check('email', 'Veuillez entrer votre email').isEmail().run(req);
+		await check('password', 'Veuillez entrer votre mot de passse').notEmpty().run(req);
+
 		// Récupération des erreurs de validations
 		const errors = validationResult(req);
 		// Vérification si il y a des erreurs de validation
@@ -332,6 +379,20 @@ module.exports.login = async (req, res) => {
 // Fonction pour la modification du profil
 module.exports.update = async (req, res) => {
 	try {
+		// Validation des champs de la requête
+		await check('lastname', 'Veuillez entrer votre nom').notEmpty().run(req);
+		await check('firstname', 'Veuillez entrer votre prenom').notEmpty().run(req);
+		await check('birthday', 'Veuillez entrer votre birthday').notEmpty().run(req);
+		await check('address', 'Veuillez entrer votre adresse').notEmpty().run(req);
+		await check('zipcode', 'Veuillez entrer votre code postale').notEmpty().run(req);
+		await check('city', 'Veuillez entrer votre ville').notEmpty().run(req);
+		await check('phone', 'Veuillez entrer votre téléphone').notEmpty().run(req);
+		await check('email', 'Veuillez entrer votre email').optional().isEmail().run(req);
+		await check('newPassword', 'Veuillez entrer un nouveau mot de passe')
+			.optional()
+			.notEmpty()
+			.run(req);
+
 		// Déclaration de variable pour la gestion des erreurs de validation
 		const errors = validationResult(req);
 
@@ -483,6 +544,19 @@ module.exports.dashboard = async (req, res) => {
 // Fonction pour voir mon profil
 module.exports.getProfile = async (req, res) => {
 	try {
+		// Validation du paramètre id
+		await check('id', "Identifiant d'utilisateur invalide").notEmpty().isMongoId().run(req);
+
+		const errors = validationResult(req);
+
+		// Vérifier si des erreurs de validations existent
+		if (!error.isEmpty) {
+			return res.status(400).json({
+				errors: errors.array(),
+			});
+		}
+
+		// Recuperer l'id de l'user
 		const userId = req.params.id;
 
 		const user = await authModel.findById(userId);

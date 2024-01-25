@@ -38,7 +38,7 @@ function generateAuthToken(user) {
 describe('Update Profile API', () => {
 	it('Should update the user profil', async () => {
 		// Entrer l'utilisateur existant en base de données (id)
-		const existingUserId = '65af8bf4ff268149c68aaff8';
+		const existingUserId = '65b0deb90b110bf697f44691';
 		const existingUser = await authModel.findById(existingUserId);
 
 		expect(existingUser).toBeDefined();
@@ -58,7 +58,7 @@ describe('Update Profile API', () => {
 				zipcode: '77896',
 				city: 'Toux',
 				phone: '0104050809',
-				email: 'daytwo@gmail.com',
+				email: 'days@gmail.com',
 			});
 		// Afficher le corps de la réponse en cas d'echec
 		if (response.status !== 200) {
