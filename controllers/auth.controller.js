@@ -283,14 +283,29 @@ module.exports.login = async (req, res) => {
 			console.log('Utilisateur non trouvé');
 			return res.status(400).json({ message: 'Inconnu au bataillon' });
 		}
+
+		// Vérification si le compte est vérouillé
+		if (user.failedLoginAttempts >= 3) {
+			console.log('Compte verouillé');
+			return res.status(400).json({ message: 'Compte vérouillé, Réessayer plus tard' });
+		}
+
 		// Vérification du mot de passe
 		// password = mot de passe qu'on rentre dans le login & user.password = le mot de passe en bdd
 		const isPasswordValid = await bcrypt.compare(password, user.password);
 		// Si le mot de passe est incorrect, renvoie une erreur
 		if (!isPasswordValid) {
 			console.log('Mot de passe incorrect');
+			// Cette ligne fait en sorte de compter le nombre de tentative de connexion avec le mauvais mot de passe
+			user.failedLoginAttempts += 1;
+			console.log('+1 failed');
+			await user.save();
 			return res.status(400).json({ message: 'Mot de passe incorrect' });
 		}
+
+		// Réinitialisation du nombre de tentatives en cas de connexion réussie
+		user.failedLoginAttempts = 0;
+		await user.save();
 		// Renvoie d'un message de success
 		console.log('Connexion success !');
 

@@ -102,6 +102,11 @@ const authSchema = new mongoose.Schema({
 		Default: null,
 	},
 
+	failedLoginAttempts: {
+		type: Number,
+		default: 0,
+	},
+
 	timestamp: {
 		type: Date,
 		default: Date.now,
