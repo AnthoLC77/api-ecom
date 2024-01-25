@@ -13,6 +13,7 @@ const nodemailer = require('nodemailer');
 // Import de crypto pour la génération du token
 const crypto = require('crypto');
 const { default: isEmail } = require('validator/lib/isEmail');
+const { log } = require('console');
 
 const transporter = nodemailer.createTransport({
 	host: 'sandbox.smtp.mailtrap.io',
@@ -331,9 +332,18 @@ module.exports.login = async (req, res) => {
 			return res.status(400).json({ message: 'Inconnu au bataillon' });
 		}
 
-		// Vérification si le compte est vérouillé
+		if (user.lockUntil && user.lockUntil < Date.now()) {
+			user.failedLoginAttempts = 0;
+			user.lockUntil = null;
+			await user.save();
+		}
+
+		// Vérification si le compte est vérouillé et ajouter 5 minutes de verrouillage
 		if (user.failedLoginAttempts >= 3) {
 			console.log('Compte verouillé');
+			// Ajouter 5 minutes de verrouillage
+			user.lockUntil = Date.now() + 1 * 60 * 1000;
+			await user.save();
 			return res.status(400).json({ message: 'Compte vérouillé, Réessayer plus tard' });
 		}
 
@@ -352,6 +362,7 @@ module.exports.login = async (req, res) => {
 
 		// Réinitialisation du nombre de tentatives en cas de connexion réussie
 		user.failedLoginAttempts = 0;
+		user.lockUntil = undefined;
 		await user.save();
 		// Renvoie d'un message de success
 		console.log('Connexion success !');
